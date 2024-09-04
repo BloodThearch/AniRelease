@@ -1,0 +1,14 @@
+Here are all the commands with their description:
+
+- ar!set <Channel>
+```
+Sets the channel where the updates will be sent. [WIP]
+```
+- ar!update
+```
+Sends a message containing recently aired episodes.
+```
+- ar!help
+```
+Sends a message containing all the commands with their descriptions.
+```

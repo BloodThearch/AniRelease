@@ -2,3 +2,4 @@ venv
 creds.json
 logs.txt
 tests/results/*
+.env
