@@ -1,6 +1,6 @@
 Here are all the commands with their description:
 
-- ar!set <Channel>
+- ar!set <Channel ID>
 ```
 Sets the channel where the updates will be sent. [WIP]
 ```
