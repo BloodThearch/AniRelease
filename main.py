@@ -22,11 +22,25 @@ async def sendMsg(msg, usrMsg):
         createLog(e)
         return
     
+    if usrMsg.lower()[0:6] == "ar!set":
+        try:
+            response = getOngoing()
+            channelID = int(usrMsg[6:].strip().split(" ")[0])
+            channel = client.get_channel(channelID)
+
+            content = "Here is a list of recently aired anime:\n"+"\n".join([" - ".join(r) for r in response])
+            await channel.send(content)
+        except Exception as e:
+            print(e)
+            createLog(e)
+
     if usrMsg.lower() == "ar!update":
         try:
             response = getOngoing()
             content = "Here is a list of recently aired anime:\n"+"\n".join([" - ".join(r) for r in response])
             await msg.channel.send(content)
+            # channel = client.get_channel(535131978039689216)
+            # await channel.send(content)
         except Exception as e:
             print(e)
             createLog(e)
