@@ -3,3 +3,4 @@ creds.json
 logs.txt
 tests/results/*
 .env
+oldState.pkl
