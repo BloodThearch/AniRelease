@@ -104,6 +104,8 @@ async def updateLoop():
 
                     content = "\n".join([" - ".join(r) for r in differenceList])
                     oldState = currentState
+                    with open("oldState.pkl", 'wb') as file:
+                        pickle.dump(currentState, file)
                     coroutines = [channel.send(content) for channel in channels]
                     await asyncio.gather(*coroutines)
             await asyncio.sleep(300)
