@@ -25,7 +25,7 @@ def scrape_anime_list():
         aTags = entry.find_all("a")
 
         # Extract anime name
-        title_tag = aTags[3]
+        title_tag = aTags[-1]
         title = title_tag.text.strip() if title_tag else "Unknown Title"
         
         # Extract episode number
