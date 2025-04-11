@@ -6,7 +6,7 @@ from src.logging import createLog
 def getOngoingTest():
     try:
         r = getOngoing()
-        with open("tests/results/getOngoingTestResult.txt", 'w') as f:
+        with open("tests/results/getOngoingTestResult.txt", 'w', encoding='utf-8') as f:
             for record in r:
                 f.write(f"{record[0]} - {record[1]}\n")
     except Exception as e:

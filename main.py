@@ -1,6 +1,7 @@
 import os
 from dotenv import load_dotenv
-from discord import Intents, Client, Message
+from discord import Intents, Client, Message, Embed, Color
+from discord.ext import tasks
 from pymongo import MongoClient
 import asyncio
 import pickle
@@ -35,6 +36,7 @@ async def sendMsg(msg, usrMsg):
     if usrMsg.lower()[0:6] == "ar!set":
         try:
             # Get the channel ID
+            print(usrMsg)
             channelID = int(usrMsg[6:].strip().split(" ")[0])
             channel = client.get_channel(channelID)
 
@@ -78,47 +80,63 @@ async def sendMsg(msg, usrMsg):
 
 # LOOPING FUNCTIONS
 
+@tasks.loop(seconds=15)
 async def updateLoop():
     try:
-        while(True):
-            currentState = getOngoing()
-            if not os.path.exists("oldState.pkl") or os.path.getsize("oldState.pkl") == 0:
-                with open("oldState.pkl", 'wb') as file:
-                    pickle.dump(currentState, file)
-                records = collection.find()
-                channelIDs = [record['channelID'] for record in records]
-                channels = [client.get_channel(channelID) for channelID in channelIDs]
+        currentState = getOngoing()
+        currentSet = set(tuple(item) for item in currentState)
+        records = collection.find()
+        channelIDs = [record['channelID'] for record in records]
+        channels = [client.get_channel(channelID) for channelID in channelIDs]
+        if not os.path.exists("oldState.pkl") or os.path.getsize("oldState.pkl") == 0:
+            with open("oldState.pkl", 'wb') as file:
+                pickle.dump(currentState, file)
+            for title, episode, image_url in currentState:
+                embed = Embed(
+                    title=title.replace("- ", "").strip(),
+                    description=f"Current episode: **{episode}**",
+                    color=Color.blue()
+                )
+                embed.set_image(url=image_url)
+                embed.set_footer(text="Initial update from MyAnimeList")
+                # embed.set_thumbnail(url=image_url)
 
-                content = "\n".join([" - ".join(r) for r in currentState])
-                coroutines = [channel.send(content) for channel in channels]
+                coroutines = [channel.send(embed=embed) for channel in channels if channel]
                 await asyncio.gather(*coroutines)
+        else:
             with open("oldState.pkl", 'rb') as file:
                 oldState = pickle.load(file)
-            oldStateTemp = [record[0] for record in oldState]
-            if len(oldState)>0:
-                differenceList = [item for item in currentState if item[0] not in oldStateTemp]
-                if len(differenceList)>0:
-                    records = collection.find()
-                    channelIDs = [record['channelID'] for record in records]
-                    channels = [client.get_channel(channelID) for channelID in channelIDs]
+            oldSet = set(tuple(item) for item in oldState)
+            differenceSet = currentSet - oldSet
+            if differenceSet:
+                differenceList = [list(item) for item in differenceSet]                
+                with open("oldState.pkl", 'wb') as file:
+                    pickle.dump(currentState, file)
+        
+                
+                for title, episode, image_url in differenceList:
+                    embed = Embed(
+                        title=title.replace("- ", "").strip(),
+                        description=f"New episode released: **{episode}**",
+                        color=Color.purple()  # You can change the color
+                    )
+                    embed.set_image(url=image_url)
+                    embed.set_footer(text="Auto-update from MyAnimeList")
+                    # embed.set_thumbnail(url=image_url)
 
-                    content = "\n".join([" - ".join(r) for r in differenceList])
-                    oldState = currentState
-                    with open("oldState.pkl", 'wb') as file:
-                        pickle.dump(currentState, file)
-                    coroutines = [channel.send(content) for channel in channels]
+                    coroutines = [channel.send(embed=embed) for channel in channels if channel]
                     await asyncio.gather(*coroutines)
-            await asyncio.sleep(300)
+
     except Exception as e:
         createLog(e)
-        print(e)
-            
+        print(e)            
 
 # APIs
 @client.event
 async def on_ready():
     print(f"{client.user} is now running.")
-    client.loop.create_task(updateLoop())
+    if not updateLoop.is_running():
+        updateLoop.start()
 
 @client.event
 async def on_message(message):
