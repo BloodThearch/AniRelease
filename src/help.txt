@@ -1,8 +1,12 @@
 Here are all the commands with their description:
 
-- ar!set <Channel ID>
+- ar!set
 ```
-Sets the channel where the updates will be sent. [WIP]
+Sets the channel where the updates will be sent.
+```
+- ar!clear
+```
+Removes all registered channels for the updates for that server.
 ```
 - ar!update
 ```
