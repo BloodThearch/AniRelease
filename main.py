@@ -35,25 +35,34 @@ async def sendMsg(msg, usrMsg):
     
     if usrMsg.lower()[0:6] == "ar!set":
         try:
-            # Get the channel ID
             print(usrMsg)
-            channelID = int(usrMsg[6:].strip().split(" ")[0])
-            channel = client.get_channel(channelID)
-
+            # Get the channel ID
             # Get server id
             serverID = msg.guild.id
+            channelID = msg.channel.id
 
             # SET CHANNEL
-            if channel is not None:
-                # Store or update the serverID with the corresponding channelID
-                collection.update_one(
-                    {'serverID': serverID},
-                    {'$set': {'channelID': channelID}},
-                    upsert=True
-                )
-                await msg.channel.send(f"Channel set to {channelID}.")
-            else:
-                await msg.channel.send("Channel not found.")
+            # Store or update the serverID with the corresponding channelID
+            collection.update_one(
+                {'serverID': serverID},
+                {'$set': {'channelID': channelID}},
+                upsert=True
+            )
+            await msg.channel.send(f"Channel set to {channelID}.")
+
+        except Exception as e:
+            print(e)
+            createLog(e)
+    
+    if usrMsg.lower()[0:8] == "ar!clear":
+        try:
+            # Get the server ID
+            print(usrMsg)
+            serverID = msg.guild.id
+
+            # Clear channels of that server
+            result = collection.delete_many({"serverID": serverID})
+            await msg.channel.send("All registered channels of this server has been cleared from registration.")
 
         except Exception as e:
             print(e)
@@ -70,7 +79,7 @@ async def sendMsg(msg, usrMsg):
     
     if usrMsg.lower() == "ar!help":
         try:
-            response = getOngoing()
+            # response = getOngoing()
             with open("src/help.txt",'r') as f:
                 content = f.read()
             await msg.channel.send(content)
@@ -80,7 +89,7 @@ async def sendMsg(msg, usrMsg):
 
 # LOOPING FUNCTIONS
 
-@tasks.loop(seconds=15)
+@tasks.loop(minutes=15)
 async def updateLoop():
     try:
         currentState = getOngoing()
